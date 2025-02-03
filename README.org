@@ -429,7 +429,7 @@ In dynamic commands, the dynamic collection process is started only every =consu
 In dynamic commands, the completion UI is only updated every =consult-omni-dynamic-refresh-delay= seconds. You probably want to run this as fast as =consult-omni-dynamic-input-debounce=.
 
 #+begin_src emacs-lisp
-(setq consult-omni-dynamic-input-throttle 0.8)
+(setq consult-omni-dynamic-refresh-delay 0.8)
 #+end_src
 
 
