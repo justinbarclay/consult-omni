@@ -39,7 +39,7 @@ When ROTATE is no-nil roate the order of items in
                  (list (car consult-omni-invidious-servers)))))
   (or consult-omni-invidious-servers
       (setq consult-omni-invidious-servers
-            (let ((params `(("pretty" . "1")
+            (let ((params '(("pretty" . "1")
                             ("sort_by" . "type"))))
               (consult-omni--fetch-url
                consult-omni-invidious-server-url

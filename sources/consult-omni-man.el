@@ -35,7 +35,7 @@ Similar to `consult-man-args' bur for consult-omni."
 (defun consult-omni--man-preview (cand)
   "Preview function for CAND from `consult-omni-man'."
   (when-let* ((Man-notify-method 'quiet)
-              (path (get-text-property 0 :path cand)))
+         (path (get-text-property 0 :path cand)))
     (funcall (consult--buffer-preview) 'preview (man path))))
 
 (defun consult-omni--man-callback (cand)

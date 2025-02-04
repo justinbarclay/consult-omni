@@ -223,7 +223,7 @@ parsing outputs of “notmuch search”, and
          (id (get-text-property 0 :id cand)))
     (when id
       (when (get-buffer consult-omni-notmuch-message-buffer-name)
-        (kill-buffer consult-omni-notmuch-message-buffer-namee))
+        (kill-buffer consult-omni-notmuch-message-buffer-name))
       (notmuch-show id nil nil query consult-omni-notmuch-message-buffer-name))))
 
 (defun consult-omni--notmuch-callback (cand)

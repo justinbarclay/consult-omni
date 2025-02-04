@@ -920,15 +920,18 @@ Description of Arguments:
            This is ignored in async requests."
   (cond
    ((eq backend 'plz)
+    (when (and type (stringp type)) (setq type (intern (downcase type))))
     (if sync
         (funcall callback (funcall #'plz (or type 'get) (consult-omni--make-url-string url params)
                                    :headers headers
+                                   :body data
                                    :as parser
                                    :then 'sync
                                    :else (or error #'consult-omni--plz-error-handler)
                                    :timeout (or timeout consult-omni-default-timeout)))
       (funcall #'plz (or type 'get) (consult-omni--make-url-string url params)
                :headers headers
+               :body data
                :as parser
                :then callback
                :else (or error #'consult-omni--plz-error-handler)
@@ -961,6 +964,7 @@ Description of Arguments:
         (funcall callback
                  (request-response-data
                   (funcall #'request url
+                           :type (or type "GET")
                            :sync sync
                            :params params
                            :headers headers
@@ -970,6 +974,7 @@ Description of Arguments:
                            :encoding (or encoding 'utf-8)
                            :timeout (or timeout consult-omni-default-timeout))))
       (funcall #'request url
+               :type (or type "GET")
                :params params
                :headers headers
                :parser parser
@@ -1733,6 +1738,25 @@ Adopted from `consult--multi-annotate'."
          ((and (symbolp fun) (functionp (eval fun)))
           (funcall (eval fun) (cdr (get-text-property 0 'multi-category cand))))))))
 
+(defun consult-omni--async-min-input (&optional min-input)
+  "Async function enforcing a minimum input length.
+This is similar
+MIN-INPUT is the minimum input length and defaults to
+`consult-omni-async-min-input'.
+
+Adopted from `consult--async-min-input'."
+  (setq min-input (or min-input consult-omni-async-min-input))
+  (lambda (sink)
+    (lambda (action)
+      (if (stringp action)
+          ;; Input can be marked with the `consult--force' property such that it
+          ;; is passed through in any case.
+          (funcall sink (if (or (and (not (equal action ""))
+                                     (get-text-property 0 'consult--force action))
+                                (>= (length action) min-input))
+                       action 'cancel))
+        (funcall sink action)))))
+
 (defun consult-omni--multi-update-sync-candidates (async source idx input &rest args)
   "Asynchronously collect candidates for INPUT from a “sync” SOURCE.
 
@@ -1754,8 +1778,10 @@ Description of Arguments:
          (cat (plist-get source :category))
          (transform (consult-omni--get-source-prop name :transform))
          (min-input (or (consult-omni--get-source-prop name :min-input) consult-omni-async-min-input))
+         (valid-input (or (consult-omni--get-source-prop name :valid-input) nil))
          (fun (plist-get source :items))
          (items))
+    (when (and valid-input (functionp valid-input)) (setq input (funcall valid-input input)))
     (when (and (functionp fun) (stringp input) (>= (length input) min-input))
       (cond
        ((and (integerp (cdr (func-arity fun))) (< (cdr (func-arity fun)) 1))
@@ -1786,8 +1812,10 @@ Description of Arguments:
          (face (and (plist-member source :face) `(face ,(plist-get source :face))))
          (cat (plist-get source :category))
          (transform (consult-omni--get-source-prop name :transform))
-         (min-input (or (consult-omni--get-source-prop name :min-input) consult-omni-async-min-input)))
+         (min-input (or (consult-omni--get-source-prop name :min-input) consult-omni-async-min-input))
+         (valid-input (or (consult-omni--get-source-prop name :valid-input) nil)))
     (when (and (stringp input) (>= (length input) min-input))
+      (when (and valid-input (functionp valid-input)) (setq input (funcall valid-input input)))
       (funcall (plist-get source :items) input
                :callback (lambda (response-items)
                  (when response-items
@@ -1816,6 +1844,7 @@ Description of Arguments:
          (builder (plist-get source :items))
          (transform (consult-omni--get-source-prop name :transform))
          (min-input (or (consult-omni--get-source-prop name :min-input) consult-omni-async-min-input))
+         (valid-input (or (consult-omni--get-source-prop name :valid-input) nil))
          (filter (consult-omni--get-source-prop name :filter))
          (props (seq-drop-while (lambda (x) (not (keywordp x))) args))
          (proc)
@@ -1825,7 +1854,10 @@ Description of Arguments:
          (consult-omni--async-log-buffer (concat " *consult-omni-async-log--" name "*"))
          (cat (plist-get source :category))
          (query (car (consult-omni--split-command input)))
-         (args (when (and (stringp input) (>= (length input) min-input)) (funcall builder input))))
+         (_ (when (and valid-input (functionp valid-input))
+              (setq input (funcall valid-input input))))
+         (args (when (and (stringp input) (>= (length input) min-input))
+                     (funcall builder input))))
     (unless (stringp (car args))
       (setq args (car args)))
     (when proc
@@ -1942,7 +1974,7 @@ Description of Arguments:
              nil))))
       (cl-incf idx))))
 
-(defun consult-omni--multi-dynamic-collection (async sources &optional min-input valid-input &rest args)
+(defun consult-omni--multi-dynamic-collection (async sources &optional min-input &rest args)
   "Dynamically compute candidates from SOURCES.
 
 This is a generalized replacement for `consult--async-process', and
@@ -1954,8 +1986,6 @@ Description of Arguments:
   ASYNC       a funciton; the sink function
   SOURCES     a list; sources to use
   MIN-INPUT   a number; minimum number of characters for fetching result
-  VALID-INPUT a function; that checks if user's input is valid and if so
-              returns the input \(or a transformed version of input\).
   ARGS        a list of args; extra arguments passed to each source
               ARGS is passed to `consult-omni--multi-update-candidates'"
   (let ((min-input (or min-input consult-omni-async-min-input))
@@ -1969,8 +1999,6 @@ Description of Arguments:
             ((or (length< action min-input) (equal action current))
                (funcall async [indicator finished]))
             (t
-             (when (and valid-input (functionp valid-input))
-                 (setq action (funcall valid-input action)))
                (setq current action)
                (funcall async 'flush)
                (funcall async [indicator running])
@@ -1980,19 +2008,14 @@ Description of Arguments:
           ((or 'cancel 'destroy)
            (setq current nil)
            (consult-omni--multi-cancel)
-           (funcall async action)
-           ;; (funcall async 'flush)
-           )
+           (funcall async action))
           (_ (funcall async action))))))
 
-(defun consult-omni--multi-dynamic-command (sources &optional min-input valid-input &rest args)
+(defun consult-omni--multi-dynamic-command (sources &optional min-input &rest args)
   "Dynamically collect with input splitting on multiple SOURCES.
 
 MIN-INPUT is the minimum number of characters before the synamic command
 fetches results.
-
-VALID-INPUT is a function that checks if the user's input is valid.  It
-returns the input with posssible trasnformatioin when valid.
 
 ARGS is passed to each source \(by passing it along with SOURCES to
 `consult-omni--multi-dynamic-collection'\).
@@ -2001,12 +2024,11 @@ This is a generalized form of `consult--async-command'
 and `consult--dynamic-compute' that allows synchronous, dynamic,
 and asynchronous sources."
   (consult--async-pipeline
-   (consult--async-min-input consult-omni-async-min-input)
+   (consult--async-min-input (or min-input consult-omni-async-min-input))
    (consult--async-throttle consult-omni-dynamic-input-throttle consult-omni-dynamic-input-debounce)
-   (lambda (sink) (consult-omni--multi-dynamic-collection sink sources (or min-input consult-omni-async-min-input) valid-input args))
-   ))
+   (lambda (sink) (consult-omni--multi-dynamic-collection sink sources (or min-input consult-omni-async-min-input) args))))
 
-(cl-defun consult-omni--multi-dynamic (sources &optional min-input valid-input args &rest options)
+(cl-defun consult-omni--multi-dynamic (sources &optional min-input args &rest options)
   "Select candidates with dynamic input from a list of SOURCES.
 
 This is similar to `consult--multi' but with dynamic update of candidates
@@ -2018,14 +2040,11 @@ Description of Arguments:
   ARGS        list of args; additional arguments sent to each SOURCE's
               collection function.
   MIN-INPUT   a number; minimum number of charatcers for fetching results
-  VALID-INPUT a function; that checks if the user's input is valid.
-              It is called with one argument, the user's input string and
-              returns the input with possible trasnformations when valid.
   OPTIONS   are similar to options in `consult--multi'."
   (let* ((sources (consult-omni--multi-enabled-sources sources))
          (selected
           (apply #'consult--read
-                 (consult-omni--multi-dynamic-command sources min-input valid-input args)
+                 (consult-omni--multi-dynamic-command sources min-input args)
                  (append
                   options
                   (list
