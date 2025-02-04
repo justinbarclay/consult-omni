@@ -2060,7 +2060,7 @@ Description of Arguments:
 #+end_src
 
 ***** update candidates for dynamic sources (async elisp)
-#+begin_src emacs-lisp :lexical t
+#+begin_src emacs-lisp
 (defun consult-omni--multi-update-dynamic-candidates (async source idx input &rest args)
   "Asynchronously collect candidates for INPUT from a “dynamic” SOURCE.
 
@@ -2261,7 +2261,7 @@ Description of Arguments:
 #+end_src
 
 ***** collect candidates form multiple sources
-#+begin_src emacs-lisp :lexical t
+#+begin_src emacs-lisp
 (defun consult-omni--multi-dynamic-collection (async sources &optional min-input &rest args)
   "Dynamically compute candidates from SOURCES.
 
@@ -2304,7 +2304,7 @@ Description of Arguments:
 
 
 ***** dynamic command
-#+begin_src emacs-lisp :lexical t
+#+begin_src emacs-lisp
 (defun consult-omni--multi-dynamic-command (sources &optional min-input &rest args)
   "Dynamically collect with input splitting on multiple SOURCES.
 
@@ -2535,7 +2535,6 @@ ADD-HIST, PREVIEW-KEY, and SORT."
          (_ (if (functionp setup) (funcall setup)))
          (selected (consult-omni--multi-dynamic (list (consult-omni--source-name source-name))
                                                 min-input
-                                                valid-input
                                                 args
                                                 :prompt prompt
                                                 :history '(:input search-hist-var)
@@ -3017,7 +3016,6 @@ URL `https://github.com/minad/consult'."
           (consult-omni--multi-dynamic
            sources
            min-input
-           valid-input
            args
            :prompt prompt
            :sort t

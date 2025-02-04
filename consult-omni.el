@@ -2210,7 +2210,6 @@ ADD-HIST, PREVIEW-KEY, and SORT."
          (_ (if (functionp setup) (funcall setup)))
          (selected (consult-omni--multi-dynamic (list (consult-omni--source-name source-name))
                                                 min-input
-                                                valid-input
                                                 args
                                                 :prompt prompt
                                                 :history '(:input search-hist-var)
@@ -2676,7 +2675,6 @@ URL `https://github.com/minad/consult'."
           (consult-omni--multi-dynamic
            sources
            min-input
-           valid-input
            args
            :prompt prompt
            :sort t
