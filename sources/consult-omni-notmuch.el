@@ -5,12 +5,12 @@
 ;; Author: Armin Darvish
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
-;; Version: 0.2
+;; Version: 0.3
 ;; Package-Requires: (
-;;         (emacs "28.1")
-;;         (consult "1.9")
+;;         (emacs "29.4")
+;;         (consult "2.0")
 ;;         (consult-notmuch "0.8.1")
-;;         (consult-omni "0.2"))
+;;         (consult-omni "0.3"))
 ;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
@@ -223,7 +223,7 @@ parsing outputs of “notmuch search”, and
          (id (get-text-property 0 :id cand)))
     (when id
       (when (get-buffer consult-omni-notmuch-message-buffer-name)
-        (kill-buffer consult-omni-notmuch-message-buffer-namee))
+        (kill-buffer consult-omni-notmuch-message-buffer-name))
       (notmuch-show id nil nil query consult-omni-notmuch-message-buffer-name))))
 
 (defun consult-omni--notmuch-callback (cand)

@@ -5,11 +5,11 @@
 ;; Author: Armin Darvish
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
-;; Version: 0.2
+;; Version: 0.3
 ;; Package-Requires: (
-;;         (emacs "28.1")
-;;         (consult "1.9")
-;;         (consult-omni "0.2"))
+;;         (emacs "29.4")
+;;         (consult "2.0")
+;;         (consult-omni "0.3"))
 ;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
@@ -35,7 +35,7 @@ Similar to `consult-man-args' bur for consult-omni."
 (defun consult-omni--man-preview (cand)
   "Preview function for CAND from `consult-omni-man'."
   (when-let* ((Man-notify-method 'quiet)
-              (path (get-text-property 0 :path cand)))
+         (path (get-text-property 0 :path cand)))
     (funcall (consult--buffer-preview) 'preview (man path))))
 
 (defun consult-omni--man-callback (cand)

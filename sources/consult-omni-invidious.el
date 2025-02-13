@@ -5,11 +5,11 @@
 ;; Author: Armin Darvish
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
-;; Version: 0.2
+;; Version: 0.3
 ;; Package-Requires: (
-;;         (emacs "28.1")
-;;         (consult "1.9")
-;;         (consult-omni "0.2"))
+;;         (emacs "29.4")
+;;         (consult "2.0")
+;;         (consult-omni "0.3"))
 ;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
@@ -39,7 +39,7 @@ When ROTATE is no-nil roate the order of items in
                  (list (car consult-omni-invidious-servers)))))
   (or consult-omni-invidious-servers
       (setq consult-omni-invidious-servers
-            (let ((params `(("pretty" . "1")
+            (let ((params '(("pretty" . "1")
                             ("sort_by" . "type"))))
               (consult-omni--fetch-url
                consult-omni-invidious-server-url

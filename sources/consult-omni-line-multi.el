@@ -5,11 +5,11 @@
 ;; Author: Armin Darvish
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
-;; Version: 0.2
+;; Version: 0.3
 ;; Package-Requires: (
-;;         (emacs "28.1")
-;;         (consult "1.9")
-;;         (consult-omni "0.2"))
+;;         (emacs "29.4")
+;;         (consult "2.0")
+;;         (consult-omni "0.3"))
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -21,14 +21,6 @@
 
 (require 'consult)
 (require 'consult-omni)
-
-(defun consult-omni--line-multi-candidates (input &optional buffers)
-  "Search for lines containing INPUT in multiple BUFFERS.
-
-This is a wrapper around `consult--line-multi-candidates' for
-consult-omni."
-  (let  ((buffers (or buffers (consult--buffer-query :directory (consult--normalize-directory default-directory) :sort 'alpha-current))))
-    (consult--line-multi-candidates buffers input)))
 
 (defun consult-omni--line-multi-preview (cand)
   "Preview function for CAND from `consult-omni-line-multi'."
@@ -71,7 +63,7 @@ Description of Arguments:
           (setq str (consult-omni--highlight-match match-str str t)))))
     str))
 
-(cl-defun consult-omni--line-multi-fetch-results (input &rest args &key callback &allow-other-keys)
+(cl-defun consult-omni--line-multi-fetch-results (input &rest args &key callback buffers &allow-other-keys)
   "Fetch search results for INPUT from `consult-line-multi' with ARGS.
 
 CALLBACK is a function used internally to update the list of candidates in
@@ -81,16 +73,16 @@ process\) to be added to the minibuffer completion cnadidates.  See the
 section on REQUEST in documentation for `consult-omni-define-source' as
 well as the function
 `consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
-  (unless (functionp 'consult-omni--line-multi-candidates)
-    (error "Consult-omni: consult-omni-line-multi not available.  Make sure `consult' is loaded properly"))
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
                (opts (car-safe opts))
-               (items (consult-omni--line-multi-candidates query))
-               (annotated-results (mapcar (lambda (item)
-                                            (let* ((source "buffers text search")
-                                                   (marker  (consult--get-location item))
-                                                   (title (substring-no-properties item 0 -1))
-                                                   (decorated (consult-omni--line-multi-format-candidate :source source :query query :marker marker :title title)))
+               (buffers (consult--buffer-query :directory (consult--normalize-directory default-directory) :sort 'alpha-current)))
+     (consult--line-multi-candidates buffers input (lambda (items)
+                                                    (funcall callback
+                                                     (mapcar (lambda (item)
+                                                     (let* ((source "buffers text search")
+                                                            (marker  (consult--get-location item))
+                                                            (title (substring-no-properties item 0 -1))
+                                                            (decorated (consult-omni--line-multi-format-candidate :source source :query query :marker marker :title title)))
                                               (propertize decorated
                                                           :source source
                                                           :title title
@@ -98,13 +90,31 @@ well as the function
                                                           :marker marker
                                                           :query query
                                                           )))
-                                          items)))
-    annotated-results))
+                                                             items))))))
+
+    ;; (consult-omni--line-multi-candidates query nil callback)))
+    ;;            (items (consult-omni--line-multi-candidates query nil callback))
+    ;;            (annotated-results (mapcar (lambda (item)
+    ;;                                         (let* ((source "buffers text search")
+    ;;                                                (marker  (consult--get-location item))
+    ;;                                                (title (substring-no-properties item 0 -1))
+    ;;                                                (decorated (consult-omni--line-multi-format-candidate :source source :query query :marker marker :title title)))
+    ;;                                           (propertize decorated
+    ;;                                                       :source source
+    ;;                                                       :title title
+    ;;                                                       :url nil
+    ;;                                                       :marker marker
+    ;;                                                       :query query
+    ;;                                                       )))
+    ;;                                       items)))
+    ;; annotated-results)
+
+;; )
 
 ;; Define the Buffers Text Search Source
 (consult-omni-define-source "buffers text search"
                             :narrow-char ?s
-                            :type 'sync
+                            :type 'dynamic
                             :require-match t
                             :category 'consult-location
                             :face 'default
@@ -115,7 +125,7 @@ well as the function
                             :on-preview #'consult-omni--line-multi-preview
                             :on-return #'identity
                             :on-callback #'consult-omni--line-multi-preview
-                            :enabled (lambda () (fboundp 'consult-omni--line-multi-candidates))
+                            :enabled (lambda () (fboundp 'consult--line-multi-candidates))
                             :group #'consult-omni--group-function
                             :sort t
                             :interactive consult-omni-intereactive-commands-type

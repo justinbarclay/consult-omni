@@ -5,12 +5,12 @@
 ;; Author: Armin Darvish
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
-;; Version: 0.2
+;; Version: 0.3
 ;; Package-Requires: (
-;;         (emacs "28.1")
-;;         (consult "1.9")
+;;         (emacs "29.4")
+;;         (consult "2.0")
 ;;         (consult-mu "1.0")
-;;         (consult-omni "0.2"))
+;;         (consult-omni "0.3"))
 ;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
@@ -57,7 +57,7 @@ Description of Arguments:
 
 (defun consult-omni--mu-preview (cand)
   "Preview function for CAND from `consult-omni-mu4e'."
-  (when-let* ((info (text-properties-at 0 (cdr (get-text-property 0 'multi-category cand))))
+  (when-let* ((info (cdr (get-text-property 0 'multi-category cand)))
               (msg (plist-get info :msg))
               (query (plist-get info :query))
               (msgid (substring-no-properties (plist-get msg :message-id)))

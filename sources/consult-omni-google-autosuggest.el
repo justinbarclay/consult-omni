@@ -5,11 +5,11 @@
 ;; Author: Armin Darvish
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
-;; Version: 0.2
+;; Version: 0.3
 ;; Package-Requires: (
-;;         (emacs "28.1")
-;;         (consult "1.9")
-;;         (consult-omni "0.2"))
+;;         (emacs "29.4")
+;;         (consult "2.0")
+;;         (consult-omni "0.3"))
 ;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
@@ -28,7 +28,7 @@
 (defun consult-omni--google-autosuggest-new (cand)
   "Return CAND for NEW non-existing candidates."
   (when (listp cand) (setq cand (car-safe cand)))
-  (or (and (stringp cand) (string-trim cand (consult--async-split-initial nil)))
+  (or (and (stringp cand) (string-trim cand (consult-omni--get-split-style-character)))
       cand))
 
 (cl-defun consult-omni--google-autosuggest-fetch-results (input &rest args &key callback &allow-other-keys)
