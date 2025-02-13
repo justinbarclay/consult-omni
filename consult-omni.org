@@ -752,7 +752,7 @@ key in IGNORE-KEYS list will be ignored."
                                            collect
                                            (unless (member key ignore-keys)
                                              (format "&%s=%s" key value))))))
-    (mapconcat #'identity list)))
+    (url-encode-url (mapconcat #'identity list))))
 
 #+end_src
 **** hashtable-to-plist
