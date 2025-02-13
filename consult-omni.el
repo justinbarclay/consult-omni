@@ -679,7 +679,7 @@ key in IGNORE-KEYS list will be ignored."
                                            collect
                                            (unless (member key ignore-keys)
                                              (format "&%s=%s" key value))))))
-    (mapconcat #'identity list)))
+    (url-encode-url (mapconcat #'identity list))))
 
 (defun consult-omni-hashtable-to-plist (hashtable &optional ignore-keys)
   "Convert a HASHTABLE to a plist.
