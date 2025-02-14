@@ -9,8 +9,7 @@
 ;; Version: 0.3
 ;; Package-Requires: (
 ;;         (emacs "29.4")
-;;         (consult "2.0")
-;;         (consult-omni "0.3"))
+;;         (consult "2.0"))
 ;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
