@@ -222,32 +222,6 @@ section on REQUEST in documentation for `consult-omni-define-source' as
 well as the function
 `consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
-               (opts (car-safe opts)))
-    (delq nil (mapcar (lambda (item)
-                        (let* ((source "Projects")
-                               (path (car item))
-                               (project (and (stringp path) (file-exists-p path) (project--find-in-directory path)))
-                               (title (or (and project (project-root project)) path))
-                               (name (or (and project (project-name project)) (file-name-nondirectory path)))
-                               (p-files (and project (project-files project)))
-                               (nfiles (and (listp p-files) (length p-files)))
-                               (size (and (stringp title) (file-exists-p title) (file-size-human-readable (file-attribute-size (file-attributes title)))))
-                               (decorated (consult-omni--projects-format-candidate :source source :title title  :name name :nfiles nfiles :size size)))
-                          (when (stringp decorated) (add-text-properties 0 1 `(:source ,source :title ,title :query ,query :project ,project :dir ,title :name ,name) decorated))
-                          decorated))
-                      (cl-remove-if-not (lambda (item) (string-match (format ".*%s.*" query) (car item))) project--list)))))
-
-(cl-defun consult-omni--projects-fetch-results (input &rest args &key callback &allow-other-keys)
-  "Fetch list of projects matching INPUT in `project--list' with ARGS.
-
-CALLBACK is a function used internally to update the list of candidates in
-the minibuffer asynchronously.  It is called with a list of strings, which
-are new annotated candidates \(e.g. as they arrive from an asynchronous
-process\) to be added to the minibuffer completion cnadidates.  See the
-section on REQUEST in documentation for `consult-omni-define-source' as
-well as the function
-`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
-  (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
                (opts (car-safe opts))
                (projects (cl-remove-if-not (lambda (item) (string-match (format ".*%s.*" query) (car item))) project--list)))
     (delq nil (cl-loop for item in  projects
